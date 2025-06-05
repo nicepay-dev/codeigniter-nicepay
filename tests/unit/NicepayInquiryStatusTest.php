@@ -4,7 +4,7 @@ use App\Helpers\Helper;
 use CodeIgniter\Test\CIUnitTestCase;
 
 use App\Models\{NICEPay, AccessToken, VirtualAccount, InquiryStatus};
-use App\Libraries\{Snap, SnapVAService, SnapQrisService};
+use App\Libraries\{Snap, SnapVAService, SnapQrisService, V2VAService};
 
 use Tests\unit\NicepayTestConst;
 
@@ -15,6 +15,8 @@ final class NicepayInquiryStatusTest extends CIUnitTestCase
     private $clientSecret;
     private $oldKeyFormat;
     private $iMidTest;
+    private $merchantKey;
+    private $v2Config;
 
     // public function setUp(): void {}
 
@@ -24,6 +26,11 @@ final class NicepayInquiryStatusTest extends CIUnitTestCase
         $this->clientSecret = $testConst::IMID_TEST_CLIENT_SECRET;
         $this->oldKeyFormat = $testConst::IMID_TEST_PRIVATE_KEY;
         $this->iMidTest = $testConst::IMID_TEST;
+        $this->merchantKey = $testConst::IMID_COMMON_MERCHANT_KEY;
+
+        $this->v2Config = NICEPay::builder()
+            ->setIsProduction(false)
+            ->build();
     }
 
     public function testInquiryStatusVASnap()
@@ -63,6 +70,36 @@ final class NicepayInquiryStatusTest extends CIUnitTestCase
             $this->fail("Exception thrown: " . $e->getMessage());
         }
 
+    }
+
+    public function testInquiryStatusVAV2()
+    {
+
+        $timeStamp = Helper::getFormattedTimestampV2();
+        $reffNo = "ordNo20250508141125";
+        $amount = "10000";
+
+        $config = $this->v2Config;
+
+        $parameter = InquiryStatus::builder()
+            ->setTimeStamp($timeStamp)
+            ->setTxId("IONPAYTEST02202505081411250494")
+            ->setIMid($this->iMidTest)
+            ->setMerchantToken($timeStamp, $this->iMidTest, $reffNo, $amount, $this->merchantKey)
+            ->setReferenceNo($reffNo)
+            ->setAmt($amount)
+            ->build();
+
+        try {
+
+            $v2VaService = new V2VAService($config);
+            $response = $v2VaService->inquiryStatus($parameter);
+
+            $this->assertEquals("0000", $response->getResultCd());
+        } catch (Exception $e) {
+
+            $this->fail("Test Inquiry Status VA V2 Failed" . $e->getMessage());
+        }
     }
 
     private function getAccessToken(NICEPay $config): string

@@ -75,8 +75,6 @@ final class NicepayEwalletTest extends CIUnitTestCase
         } catch (Exception $e) {
             $this->fail("Ewallet Snap Payment Test Failed, Error thrown : " . $e->getMessage());
         }
-
-        var_dump($response);
     }
 
     private function getAccessToken(NICEPay $config): string

@@ -4,7 +4,7 @@ use App\Helpers\Helper;
 use CodeIgniter\Test\CIUnitTestCase;
 
 use App\Models\{NICEPay, AccessToken, VirtualAccount};
-use App\Libraries\{Snap, SnapVAService};
+use App\Libraries\{Snap, SnapVAService, V2VAService};
 
 use Tests\unit\NicepayTestConst;
 
@@ -14,6 +14,7 @@ final class NicepayVirtualAccountTest extends CIUnitTestCase
     private $clientSecret;
     private $oldKeyFormat;
     private $iMidTest;
+    private $merchantKey;
 
     // public function setUp(): void {}
 
@@ -23,6 +24,7 @@ final class NicepayVirtualAccountTest extends CIUnitTestCase
         $this->clientSecret = $const::IMID_TEST_CLIENT_SECRET;
         $this->oldKeyFormat = $const::IMID_TEST_PRIVATE_KEY;
         $this->iMidTest = $const::IMID_TEST;
+        $this->merchantKey = $const::IMID_COMMON_MERCHANT_KEY;
     }
 
     public function testGenerateVASnap()
@@ -66,9 +68,64 @@ final class NicepayVirtualAccountTest extends CIUnitTestCase
             $this->fail("Exception thrown: " . $e->getMessage());
         }
 
+        $json = json_encode($response->toArray());
+
         $virtualAccountDataArray = $response->getVirtualAccountData();
         $totalAmountArray = $response->getVirtualAccountData()['totalAmount'];
         $additionalInfoArray = $response->getVirtualAccountData()['additionalInfo'];
+    }
+
+    public function testGenerateVAV2()
+    {
+        $timestamp = Helper::getFormattedTimestampV2();
+        $configBuilder = NICEPay::builder();
+        $config = $configBuilder
+            // ->setIsProduction(false)
+            ->setIsCloudServer(isCloudServer: true)
+            ->build();
+        $reffNo = "ordNo" . $timestamp;
+        $amount = "10000";
+        $virtualAccountBuilder = VirtualAccount::builder();
+        $parameter = $virtualAccountBuilder
+            ->setTimeStamp($timestamp)
+            ->setIMid($this->iMidTest)
+            ->setPayMethod("02")
+            ->setCurrency("IDR")
+            ->setDescription("Transaction Description")
+            ->setBankCd("CENA")
+            ->setAmt($amount)
+            ->setReferenceNo($reffNo)
+            ->setMerchantToken($timestamp, $this->iMidTest, $reffNo, $amount, $this->merchantKey)
+            ->setVacctValidDt("20251004")
+            ->setVacctValidTm("101010")
+            ->setMerFixAcctId("")
+            ->setDbProcessUrl("https://webhook.site/7c2d47f6-557b-4b85-b91a-ad3b6182b10c")
+            ->setGoodsNm("Test VA V2 PHP")
+            ->setCartData("{}")
+            ->setBillingNm("Nicepay PHP Codeigniter")
+            ->setBillingPhone("081234567890")
+            ->setBillingEmail("nicepay@example.com")
+            ->setBillingAddr("Jln. Raya Kasablanka Kav.88")
+            ->setBillingCity("South Jakarta")
+            ->setBillingState("DKI Jakarta")
+            ->setBillingPostCd("15119")
+            ->setBillingCountry("Indonesia")
+            ->build();
+
+        $v2VaService = new V2VAService($config);
+
+        try {
+            $response = $v2VaService->registration($parameter);
+            $this->assertEquals("0000", $response->getResultCd());
+            if($response->getResultMsg() == "Success"){
+                $this->assertEquals("Success", $response->getResultMsg());
+            } else {
+                $this->assertEquals("SUCCESS", $response->getResultMsg());
+            }
+            // Add more assertions as needed for specific response properties
+        } catch (Exception $e) {
+            $this->fail("Exception thrown: " . $e->getMessage());
+        }
     }
 
     private function getAccessToken(NICEPay $config): string

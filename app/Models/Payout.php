@@ -27,6 +27,21 @@ class Payout
     private $originalPartnerReferenceNo;
     private $accountNo;
     private $additionalInfo;
+    private $msId;
+
+    //    V2
+
+    private $timeStamp;
+    private $iMid;
+    private $merchantToken;
+    private $benefNm;
+    private $benefStatus;
+    private $benefType;
+    private $bankCd;
+    private $amt;
+    private $referenceNo;
+    private $benefPhone;
+    private $tXid;
 
     function __construct(PayoutBuilder $builder)
     {
@@ -52,6 +67,21 @@ class Payout
         $this->originalPartnerReferenceNo = $builder->getOriginalPartnerReferenceNo();
         $this->accountNo = $builder->getAccountNo();
         $this->additionalInfo = $builder->getAdditionalInfo();
+        $this->msId = $builder->getMsId();
+
+        // V2 
+
+        $this->timeStamp = $builder->getTimeStamp();
+        $this->iMid = $builder->getIMid();
+        $this->merchantToken = $builder->getMerchantToken();
+        $this->benefNm = $builder->getBenefNm();
+        $this->benefStatus = $builder->getBenefStatus();
+        $this->benefType = $builder->getBenefType();
+        $this->bankCd = $builder->getBankCd();
+        $this->amt = $builder->getAmt();
+        $this->referenceNo = $builder->getReferenceNo();
+        $this->benefPhone = $builder->getBenefPhone();
+        $this->tXid = $builder->getTXid();
     }
 
     public static function builder(): PayoutBuilder
@@ -86,6 +116,58 @@ class Payout
             "accountNo" => $this->accountNo ?? null,
             "additionalInfo" => $this->additionalInfo ?? null,
         ];
+
+        if (isset($this->additionalInfo)) {
+            $data['additionalInfo'] = $this->additionalInfo;
+        };
+        if (isset($this->accountNo)) {
+            $data['accountNo'] = $this->accountNo;
+        };
+        if (isset($this->msId)) {
+            $data['msId'] = $this->msId;
+        }
+        if (isset($this->originalReferenceNo)) {
+            $data['originalReferenceNo'] = $this->originalReferenceNo;
+        }
+        if (isset($this->originalPartnerReferenceNo)) {
+            $data['originalPartnerReferenceNo'] = $this->originalPartnerReferenceNo;
+        }
+        if (isset($this->deliveryId)) {
+            $data['deliveryId'] = $this->deliveryId;
+        }
+        if (isset($this->deliveryName)) {
+            $data['deliveryName'] = $this->deliveryName;
+        }
+
+        return $data;
+    }
+
+    public function toArrayV2()
+    {
+        $arrV2 = [
+            'timeStamp' => $this->timeStamp,
+            'merchantToken' => $this->merchantToken,
+            'referenceNo' => $this->referenceNo,
+            'amt' => $this->amt,
+            'iMid' => $this->iMid,
+            'benefNm' => $this->benefNm,
+            'benefStatus' => $this->benefStatus,
+            'benefType' => $this->benefType,
+            'bankCd' => $this->bankCd,
+            'benefPhone' => $this->benefPhone,
+            "msId" => $this->msId
+        ];
+
+        if (isset($this->tXid) && trim($this->tXid) !== '') {
+            $arrV2['tXid'] = $this->tXid;
+        }
+
+        return $arrV2;
+    }
+
+    public function setMerchantToken($merchantToken)
+    {
+        $this->merchantToken = $merchantToken;
     }
 }
 
@@ -114,6 +196,21 @@ class PayoutBuilder
     private $originalPartnerReferenceNo;
     private $accountNo;
     private $additionalInfo;
+    private $msId;
+
+    // V2 
+
+    private $timeStamp;
+    private $iMid;
+    private $merchantToken;
+    private $benefNm;
+    private $benefStatus;
+    private $benefType;
+    private $bankCd;
+    private $amt;
+    private $referenceNo;
+    private $benefPhone;
+    private $tXid;
 
     // GETTER SNAP
 
@@ -215,6 +312,68 @@ class PayoutBuilder
     public function getAdditionalInfo(): mixed
     {
         return $this->additionalInfo;
+    }
+
+    public function getMsId()
+    {
+        return $this->msId;
+    }
+
+    // GETTER V2
+
+    public function getTimeStamp()
+    {
+        return $this->timeStamp;
+    }
+
+    public function getIMid()
+    {
+        return $this->iMid;
+    }
+
+    public function getMerchantToken()
+    {
+        return $this->merchantToken;
+    }
+
+    public function getBenefNm()
+    {
+        return $this->benefNm;
+    }
+
+    public function getBenefStatus()
+    {
+        return $this->benefStatus;
+    }
+
+    public function getBenefType()
+    {
+        return $this->benefType;
+    }
+
+    public function getBankCd()
+    {
+        return $this->bankCd;
+    }
+
+    public function getAmt()
+    {
+        return $this->amt;
+    }
+
+    public function getReferenceNo()
+    {
+        return $this->referenceNo;
+    }
+
+    public function getBenefPhone()
+    {
+        return $this->benefPhone;
+    }
+
+    public function getTXid()
+    {
+        return $this->tXid;
     }
 
     // SETTER SNAP
@@ -340,6 +499,98 @@ class PayoutBuilder
     public function setAdditionalInfo($additionalInfo): PayoutBuilder
     {
         $this->additionalInfo = $additionalInfo;
+        return $this;
+    }
+
+    public function setMsId($msId): PayoutBuilder
+    {
+        $this->msId = $msId;
+        return $this;
+    }
+
+    // SETTER V2
+
+    public function setTimeStamp($timeStamp)
+    {
+        $this->timeStamp = $timeStamp;
+        return $this;
+    }
+
+    public function setIMid($iMid)
+    {
+        $this->iMid = $iMid;
+        return $this;
+    }
+
+    public function setMerchantToken($timeStamp, $imid, $reffNo, $amount, $merchantKey)
+    {
+        $this->merchantToken = $timeStamp . $imid . $reffNo . $amount . $merchantKey;
+        return $this;
+    }
+
+    public function setMerchantTokenPayoutAction($timeStamp, $imid, $tXid, $merchantKey)
+    {
+        $this->merchantToken = $timeStamp . $imid . $tXid  . $merchantKey;
+        return $this;
+    }
+
+    public function setMerchantTokenPayoutInquiry($timeStamp, $imid, $tXid, $accountNo, $merchantKey)
+    {
+        $this->merchantToken = $timeStamp . $imid . $tXid  . $accountNo . $merchantKey;
+        return $this;
+    }
+
+    public function setMerchantTokenBalancePayout($timeStamp, $imid, $merchantKey)
+    {
+        $this->merchantToken = $timeStamp . $imid  . $merchantKey;
+        return $this;
+    }
+
+    public function setBenefNm($benefNm)
+    {
+        $this->benefNm = $benefNm;
+        return $this;
+    }
+
+    public function setBenefStatus($benefStatus)
+    {
+        $this->benefStatus = $benefStatus;
+        return $this;
+    }
+
+    public function setBenefType($benefType)
+    {
+        $this->benefType = $benefType;
+        return $this;
+    }
+
+    public function setBankCd($bankCd)
+    {
+        $this->bankCd = $bankCd;
+        return $this;
+    }
+
+    public function setAmt($amt)
+    {
+        $this->amt = $amt;
+        return $this;
+    }
+
+    public function setReferenceNo($referenceNo)
+    {
+        $this->referenceNo = $referenceNo;
+        return $this;
+    }
+
+    public function setBenefPhone($benefPhone)
+    {
+        $this->benefPhone = $benefPhone;
+        return $this;
+    }
+
+    public function setTXid($tXid)
+    {
+        $this->tXid = $tXid;
         return $this;
     }
 
